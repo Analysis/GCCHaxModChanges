@@ -1,6 +1,6 @@
 # GCCHaxModChanges
 
-This is a repository for Hax's Gamecube Controller mod code demonstrated on his YouTube and on Imgur:
+This is a repository for Hax's Gamecube Controller mod code demonstrated on his YouTube and on Imgur, with the code itself posted on pastebin:
 
 https://www.youtube.com/watch?v=H4MXJt8UspQ
 
