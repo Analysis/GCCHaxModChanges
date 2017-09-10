@@ -3,7 +3,11 @@ set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/cmake/ArduinoToolchain.cmake)
 set(PROJECT_NAME HaxMod)
 project(${PROJECT_NAME})
 
-set(${CMAKE_PROJECT_NAME}_SKETCH HaxMod.ino)
+#set(${CMAKE_PROJECT_NAME}_SKETCH HaxMod.ino)
+#find_package(Nintendo.h REQUIRED)
+#include_directories(${/home/daniel/CLionProjects/HaxMod/NintendoLibrary_INCLUDE_DIRS})
+#set(LIBS ${LIBS} ${set(LIBS ${LIBS} ${LibXML++_LIBRARIES})_LIBRARIES})
+#target_link_libraries(HaxMod.ino ${LIBS})
 
 #### Uncomment below additional settings as needed.
 # set(${CMAKE_PROJECT_NAME}_BOARD mega)

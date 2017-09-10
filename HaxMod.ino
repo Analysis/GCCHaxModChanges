@@ -1,32 +1,34 @@
-//This section is for user inputted data to make the code personalized to the particular controller
+// This section is for user inputted data to make the code personalized to the particular controller
 
-//shield drop
+// Shield drop data from the user
 #define sw_notch_x_value -.7000
 #define sw_notch_y_value -.7000
 #define se_notch_x_value  .7000
 #define se_notch_y_value -.7000
-//record southwest and southeast notch values
+// Record southwest and southeast notch values
 
-//to switch to dolphin mode hold dpad right for 5 seconds
-//to return to a stock controller hold dpad left for 10 seconds
+// To switch to dolphin mode hold dpad right for 5 seconds
+// To return to a stock controller hold dpad left for 10 seconds
 
 //======================================================================================================================
-//  Install Intstructions:
-//    1. connect arduino to computer and make sure proper board [Arduino Nano], processor [ATmega328], and COM
+//    Install Instructions:
+//
+//    1. connect Arduino to computer and make sure proper board [Arduino Nano], processor [ATmega328], and COM
 //       port [highest number] are selected under Tools.
+//
 //    2. hit the upload button (the arrow) and wait for it to say "Done Uploading" at the bottom before disconnecting
 //       the Arduino.
-//    3. connect 5V and Gnd from GCC header to 5V and Gnd pins on arduino (do not sever either wire)
+//
+//    3. connect 5V and Gnd from GCC header to 5V and Gnd pins on Arduino (do not sever either wire)
+//
 //    4. sever data wire between GCC cable and header on controller
+//
 //    5. connect D2 on Arduino to data header on controller, and D3 to data wire from cable
+//
 //    6. ensure no wires are caught anywhere and close everything up
 //
 //    Note: if there is any trouble with steps 1 or 2, get the CH340 driver for your operating system from google
 //======================================================================================================================
-
-
-
-
 
 #include "Nintendo.h"
 
@@ -45,9 +47,12 @@ float swang, seang;
 word mode, toggle;
 unsigned long n;
 
+//======================================================================================================================
+// Master method to run convert the inputs with their respective mods.
+//======================================================================================================================
 void convertinputs()
 {
-    // Reduces deadzone of cardinals and gives steepest/shallowest angles when on or near the gate
+    // Reduces dead-zone of cardinals and gives steepest/shallowest angles when on or near the gate
     perfectangles();
 
     // Snaps sufficiently high cardinal inputs to vectors of 1.0 magnitude of analog stick and c stick
@@ -78,10 +83,26 @@ void perfectangles()
 //======================================================================================================================
 void maxvectors()
 {
-    if(axm>75&&aym< 9){gcc.xAxis  = (ax>0)?255:1; gcc.yAxis  = 128;}
-    if(aym>75&&axm< 9){gcc.yAxis  = (ay>0)?255:1; gcc.xAxis  = 128;}
-    if(cxm>75&&cym<23){gcc.cxAxis = (cx>0)?255:1; gcc.cyAxis = 128;}
-    if(cym>75&&cxm<23){gcc.cyAxis = (cy>0)?255:1; gcc.cxAxis = 128;}
+    if(axm>75&&aym< 9)
+    {
+        gcc.xAxis  = (ax>0)?255:1;
+        gcc.yAxis  = 128;
+    }
+    if(aym>75&&axm< 9)
+    {
+        gcc.yAxis  = (ay>0)?255:1;
+        gcc.xAxis  = 128;
+    }
+    if(cxm>75&&cym<23)
+    {
+        gcc.cxAxis = (cx>0)?255:1;
+        gcc.cyAxis = 128;
+    }
+    if(cym>75&&cxm<23)
+    {
+        gcc.cyAxis = (cy>0)?255:1;
+        gcc.cxAxis = 128;
+    }
 }
 //======================================================================================================================
 //  Allows shield drops down and gives a 6 degree range of shield dropping centered on SW and SE gates
@@ -130,7 +151,8 @@ void backdash()
     else buf = 0;
 }
 //======================================================================================================================
-// Ensures close to 0 values are reported as 0 on the sticks to fix dolphin calibration and allows user to switch to dolphin mode for backdash
+// Ensures close to 0 values are reported as 0 on the sticks to fix dolphin calibration and allows user to switch to
+// dolphin mode for backdash
 //======================================================================================================================
 void dolphinfix()
 {
@@ -208,22 +230,26 @@ void loop()
     controller.read();
     gcc = controller.getReport();
 
-    // Offsets from nuetral position of analog stick
-    ax = gcc.xAxis -128; ay = gcc.yAxis -128;
+    // Offsets from neutral position of analog stick
+    ax = gcc.xAxis -128;
+    ay = gcc.yAxis -128;
 
-    // Offsets from nuetral position of c stick
-    cx = gcc.cxAxis-128; cy = gcc.cyAxis-128;
+    // Offsets from neutral position of c stick
+    cx = gcc.cxAxis-128;
+    cy = gcc.cyAxis-128;
 
     // Magnitude of analog stick offsets
-    axm = abs(ax); aym = abs(ay);
+    axm = abs(ax);
+    aym = abs(ay);
 
     // Magnitude of c stick offsets
-    cxm = abs(cx); cym = abs(cy);
+    cxm = abs(cx);
+    cym = abs(cy);
 
     // Determine if the user wants the code off
     if(!off)
     {
-        // Implements all the fixes (remove this line to unmod the controller)
+        // Implements all the fixes (remove this line to un-mod the controller completely)
         convertinputs();
     }
 
