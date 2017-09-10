@@ -28,7 +28,8 @@ THE SOFTWARE.
 // Gamecube Controller API
 //================================================================================
 
-CGamecubeController::CGamecubeController(const uint8_t p) : pin(p){
+CGamecubeController::CGamecubeController(const uint8_t p) : pin(p)
+{
     // Empty
 }
 
@@ -172,8 +173,8 @@ Gamecube_Data_t CGamecubeController::getData(void)
 //================================================================================
 // Gamecube Console API
 //================================================================================
-
-CGamecubeConsole::CGamecubeConsole(const uint8_t p) : pin(p){
+CGamecubeConsole::CGamecubeConsole(const uint8_t p) : pin(p)
+{
     // Empty
 }
 
@@ -182,7 +183,8 @@ bool CGamecubeConsole::write(Gamecube_Data_t &data)
 {
     // Abort if controller was not initialized.
     // Gamecube will refuse and weird connect/disconnect errors will occur.
-    if (data.report.origin) {
+    if (data.report.origin)
+    {
         return false;
     }
 
@@ -210,15 +212,18 @@ bool CGamecubeConsole::write(Gamecube_Data_t &data)
     SREG = oldSREG;
 
     // Set rumble depending on read return value
-    if (ret == 3) {
+    if (ret == 3)
+    {
         data.status.rumble = false;
         return true;
     }
-    else if (ret == 4) {
+    else if (ret == 4)
+    {
         data.status.rumble = true;
         return true;
     }
-    else if (ret == 5) {
+    else if (ret == 5)
+    {
         data.status.rumble = false;
         return true;
     }

@@ -43,21 +43,25 @@ THE SOFTWARE.
 // Gamecube Typedefs
 //================================================================================
 
-typedef union{
+typedef union
+{
     // 8 bytes of datareport that we get from the controller
     uint8_t raw8[8];
     uint16_t raw16[0];
     uint32_t raw32[0];
 
-    struct{
+    struct
+    {
         uint8_t buttons0;
-        union{
+        union
+        {
             uint8_t buttons1;
             uint8_t dpad : 4;
         };
     };
 
-    struct {
+    struct
+    {
         // first data byte (bitfields are sorted in LSB order)
         uint8_t a : 1;
         uint8_t b : 1;
@@ -93,7 +97,8 @@ typedef union{
 typedef Gamecube_N64_Status_t Gamecube_Status_t;
 
 
-typedef union{
+typedef union
+{
     // GetOrigin requests the initial values of the controller when it was plugged in (powered up)
     // This request consists of a normal data package and 2 unknown bytes.
     // It is possible that those mark the deadzone/toleranz, but are zero in my tests.
@@ -103,7 +108,8 @@ typedef union{
     uint16_t raw16[0];
     uint32_t raw32[0];
 
-    struct{
+    struct
+    {
         Gamecube_Report_t inititalData;
         uint8_t deadzone0;
         uint8_t deadzone1;
@@ -111,7 +117,8 @@ typedef union{
 } Gamecube_Origin_t;
 
 
-struct Gamecube_Data_t{
+struct Gamecube_Data_t
+{
     // All information required for reading/writing a Gamecube Controller
     Gamecube_Status_t status;
     Gamecube_Origin_t origin;

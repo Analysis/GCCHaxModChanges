@@ -21,11 +21,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <stdbool.h>
 #include "Gamecube.h"
 
-//================================================================================
+//======================================================================================================================
 // Gamecube Controller
-//================================================================================
+//======================================================================================================================
 
 bool gc_init(const uint8_t pin, Gamecube_Status_t* status)
 {
@@ -74,9 +75,9 @@ bool gc_read(const uint8_t pin, Gamecube_Report_t* report, const bool rumble)
 }
 
 
-//================================================================================
+//======================================================================================================================
 // Gamecube Console
-//================================================================================
+//======================================================================================================================
 
 uint8_t gc_write(const uint8_t pin, Gamecube_Status_t* status, Gamecube_Origin_t* origin, Gamecube_Report_t* report)
 {
@@ -139,13 +140,16 @@ uint8_t gc_write(const uint8_t pin, Gamecube_Status_t* status, Gamecube_Origin_t
         // Rumble: 1, 5, 9, 13, 17, ...
         // You can see that only 4 of those requests are possible,
         // the gamecube will ignore the left 6 MSB.
-        if((command[2] % 4) == 0x01){
+        if((command[2] % 4) == 0x01)
+        {
             ret = 4;
         }
-        else if((command[2] % 4) == 0x02){
+        else if((command[2] % 4) == 0x02)
+        {
             ret = 5;
         }
-        else if((command[2] % 4) == 0x03){
+        else if((command[2] % 4) == 0x03)
+        {
             ret = 6;
         }
     }

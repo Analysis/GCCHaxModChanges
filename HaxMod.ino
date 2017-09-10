@@ -1,11 +1,8 @@
-// This section is for user inputted data to make the code personalized to the particular controller
-
-// Shield drop data from the user
+// Record southwest and southeast notch values
 #define sw_notch_x_value -.7000
 #define sw_notch_y_value -.7000
 #define se_notch_x_value  .7000
 #define se_notch_y_value -.7000
-// Record southwest and southeast notch values
 
 // To switch to dolphin mode hold dpad right for 5 seconds
 // To return to a stock controller hold dpad left for 10 seconds
@@ -30,6 +27,7 @@
 //    Note: if there is any trouble with steps 1 or 2, get the CH340 driver for your operating system from google
 //======================================================================================================================
 
+#include <Arduino.h>
 #include "Nintendo.h"
 
 // Sets D2 on Arduino to read data from controller
@@ -39,99 +37,105 @@ CGamecubeController controller(2);
 CGamecubeConsole console(3);
 
 // Structural values for controller state
-Gamecube_Report_t gcc;
-bool shield, tilt, dolphin = 0, off = 0;
+Gamecube_Report_t gamecubeReport;
+bool shieldOn, tilt, dolphin = 0, turnCodeOff = 0;
 byte axm, aym, cxm, cym, cycles;
 char ax, ay, cx, cy, buf;
-float swang, seang;
+float swAngle, seAngle;
 word mode, toggle;
 unsigned long n;
 
 //======================================================================================================================
-// Master method to run convert the inputs with their respective mods.
-//======================================================================================================================
-void convertinputs()
-{
-    // Reduces dead-zone of cardinals and gives steepest/shallowest angles when on or near the gate
-    perfectangles();
-
-    // Snaps sufficiently high cardinal inputs to vectors of 1.0 magnitude of analog stick and c stick
-    maxvectors();
-
-    // Allows shield drops down and gives a 6 degree range of shield dropping centered on SW and SE gates
-    shielddrops();
-
-    // Fixes dashback by imposing a 1 frame buffer upon tilt turn values
-    backdash();
-
-    // Ensures close to 0 values are reported as 0 on the sticks to fix dolphin calibration and allows user to switch to dolphin mode for backdash
-    dolphinfix();
-
-    // Function to disable all code if DPAD LEFT is held for 10 seconds
-    nocode();
-}
-//======================================================================================================================
 // Reduce the dead zone in cardinal directions and give the steepest/shallowest angles when on or near the gate
 //======================================================================================================================
-void perfectangles()
+void perfectAngles()
 {
-    if(axm>75){gcc.xAxis = (ax>0)?204:52; if(aym<23) gcc.yAxis = (ay>0)?151:105;}
-    if(aym>75){gcc.yAxis = (ay>0)?204:52; if(axm<23) gcc.xAxis = (ax>0)?151:105;}
+    if(axm>75)
+    {
+        gamecubeReport.xAxis = (ax>0)?204:52;
+        if(aym<23)
+        {
+            gamecubeReport.yAxis = (ay>0)?151:105;
+        }
+    }
+    if(aym>75)
+    {
+        gamecubeReport.yAxis = (ay>0)?204:52;
+        if(axm<23)
+        {
+            gamecubeReport.xAxis = (ax>0)?151:105;
+        }
+    }
 }
 //======================================================================================================================
 // Snaps sufficiently high cardinal inputs to vectors of 1.0 magnitude of analog stick and c stick
 //======================================================================================================================
-void maxvectors()
+void maximizeVectors()
 {
     if(axm>75&&aym< 9)
     {
-        gcc.xAxis  = (ax>0)?255:1;
-        gcc.yAxis  = 128;
+        gamecubeReport.xAxis  = (ax>0)?255:1;
+        gamecubeReport.yAxis  = 128;
     }
     if(aym>75&&axm< 9)
     {
-        gcc.yAxis  = (ay>0)?255:1;
-        gcc.xAxis  = 128;
+        gamecubeReport.yAxis  = (ay>0)?255:1;
+        gamecubeReport.xAxis  = 128;
     }
     if(cxm>75&&cym<23)
     {
-        gcc.cxAxis = (cx>0)?255:1;
-        gcc.cyAxis = 128;
+        gamecubeReport.cxAxis = (cx>0)?255:1;
+        gamecubeReport.cyAxis = 128;
     }
     if(cym>75&&cxm<23)
     {
-        gcc.cyAxis = (cy>0)?255:1;
-        gcc.cxAxis = 128;
+        gamecubeReport.cyAxis = (cy>0)?255:1;
+        gamecubeReport.cxAxis = 128;
     }
+}
+//======================================================================================================================
+// Function to return angle in degrees when given x and y components
+//======================================================================================================================
+float angle(float xValue, float yValue)
+{
+    return atan(yValue/xValue)*57.2958;
+}
+
+//======================================================================================================================
+// Function to return vector magnitude when given x and y components
+//======================================================================================================================
+float magnitude(char xValue, char yValue)
+{
+    return sqrt(sq(xValue)+sq(yValue));
 }
 //======================================================================================================================
 //  Allows shield drops down and gives a 6 degree range of shield dropping centered on SW and SE gates
 //======================================================================================================================
-void shielddrops()
+void buffShieldDrops()
 {
-    shield = gcc.l||gcc.r||gcc.left>74||gcc.right>74||gcc.z;
-    if(shield)
+    shieldOn = (gamecubeReport.l || gamecubeReport.r || gamecubeReport.left>74 || gamecubeReport.right>74 ||gamecubeReport.z);
+    if(shieldOn)
     {
-        if(ay<0&&mag(ax,ay)>75)
+        if(ay<0&& magnitude(ax, ay)>75)
         {
 
-            if(ax<0&&abs(ang(axm,aym)-swang)<4)
+            if(ax<0&&abs(angle(axm, aym)-swAngle)<4)
             {
-                gcc.yAxis = 73; gcc.xAxis =  73;
+                gamecubeReport.yAxis = 73; gamecubeReport.xAxis =  73;
             }
 
-            if(ax>0&&abs(ang(axm,aym)-seang)<4)
+            if(ax>0&&abs(angle(axm, aym)-seAngle)<4)
             {
-                gcc.yAxis = 73; gcc.xAxis = 183;
+                gamecubeReport.yAxis = 73; gamecubeReport.xAxis = 183;
             }
         }
-        else if(abs(ay+39)<17&&axm<23) gcc.yAxis = 73;
+        else if(abs(ay+39)<17&&axm<23) gamecubeReport.yAxis = 73;
     }
 }
 //======================================================================================================================
 // Fixes dashback by imposing a 1 frame buffer upon tilt turn values
 //======================================================================================================================
-void backdash()
+void fixDashBack()
 {
     if(aym<23)
     {
@@ -144,7 +148,7 @@ void backdash()
             buf--;
             if(axm<64)
             {
-                gcc.xAxis = 128+ax*(axm<23);
+                gamecubeReport.xAxis = 128+ax*(axm<23);
             }
         }
     }
@@ -154,17 +158,17 @@ void backdash()
 // Ensures close to 0 values are reported as 0 on the sticks to fix dolphin calibration and allows user to switch to
 // dolphin mode for backdash
 //======================================================================================================================
-void dolphinfix()
+void dolphinFix()
 {
     if(axm<5&&aym<5)
     {
-        gcc.xAxis  = 128; gcc.yAxis  = 128;
+        gamecubeReport.xAxis  = 128; gamecubeReport.yAxis  = 128;
     }
     if(cxm<5&&cym<5)
     {
-        gcc.cxAxis = 128; gcc.cyAxis = 128;
+        gamecubeReport.cxAxis = 128; gamecubeReport.cyAxis = 128;
     }
-    if(gcc.dright&&mode<2500)
+    if(gamecubeReport.dright && mode<2500)
     {
         dolphin = dolphin||(mode++>2000);
     }
@@ -175,34 +179,43 @@ void dolphinfix()
 //======================================================================================================================
 // This function will turn off all code is the LEFT on the dpad is held for 10 seconds
 //======================================================================================================================
-void nocode()
+void determineCodeOff()
 {
-    if(gcc.dleft)
+    // If the user holds DPAD LEFT, count for 10 seconds.
+    if(gamecubeReport.dleft)
     {
         if(n == 0)
         {
             n = millis();
         }
 
-        off = off||(millis()-n>2000);
+        turnCodeOff = turnCodeOff||(millis()-n>2000);
 
     }
     else n = 0;
 }
 //======================================================================================================================
-// Function to return angle in degrees when given x and y components
+// Master method to run convert the inputs with their respective mods.
 //======================================================================================================================
-float ang(float xval, float yval)
+void convertInputs()
 {
-    return atan(yval/xval)*57.2958;
-}
+    // Reduces dead-zone of cardinals and gives steepest/shallowest angles when on or near the gate
+    perfectAngles();
 
-//======================================================================================================================
-// Function to return vector magnitude when given x and y components
-//======================================================================================================================
-float mag(char  xval, char  yval)
-{
-    return sqrt(sq(xval)+sq(yval));
+    // Snaps sufficiently high cardinal inputs to vectors of 1.0 magnitude of analog stick and c stick
+    maximizeVectors();
+
+    // Allows shield drops down and gives a 6 degree range of shield dropping centered on SW and SE gates
+    buffShieldDrops();
+
+    // Fixes dashback by imposing a 1 frame buffer upon tilt turn values
+    fixDashBack();
+
+    // Ensures close to 0 values are reported as 0 on the sticks to fix dolphin calibration and allows user to switch to dolphin mode for backdash
+    dolphinFix();
+
+    // Function to disable all code if DPAD LEFT is held for 10 seconds
+    determineCodeOff();
 }
 //======================================================================================================================
 // Set up initial values for the program to run
@@ -210,16 +223,16 @@ float mag(char  xval, char  yval)
 void setup()
 {
     // Initial Values
-    gcc.origin  = 0;
-    gcc.errlatch= 0;
-    gcc.high1   = 0;
-    gcc.errstat = 0;
+    gamecubeReport.origin  = 0;
+    gamecubeReport.errlatch= 0;
+    gamecubeReport.high1   = 0;
+    gamecubeReport.errstat = 0;
 
     // Calculates angle of SW gate base on user inputted data
-    swang = ang(abs(sw_notch_x_value), abs(sw_notch_y_value));
+    swAngle = angle(abs(sw_notch_x_value), abs(sw_notch_y_value));
 
     // Calculates angle of SE gate based on user inputted data
-    seang = ang(abs(se_notch_x_value), abs(se_notch_y_value));
+    seAngle = angle(abs(se_notch_x_value), abs(se_notch_y_value));
 }
 //======================================================================================================================
 // Main loop for the program to run
@@ -228,15 +241,15 @@ void loop()
 {
     // Read input from the controller and generate a report
     controller.read();
-    gcc = controller.getReport();
+    gamecubeReport = controller.getReport();
 
     // Offsets from neutral position of analog stick
-    ax = gcc.xAxis -128;
-    ay = gcc.yAxis -128;
+    ax = gamecubeReport.xAxis -128;
+    ay = gamecubeReport.yAxis -128;
 
     // Offsets from neutral position of c stick
-    cx = gcc.cxAxis-128;
-    cy = gcc.cyAxis-128;
+    cx = gamecubeReport.cxAxis-128;
+    cy = gamecubeReport.cyAxis-128;
 
     // Magnitude of analog stick offsets
     axm = abs(ax);
@@ -247,12 +260,12 @@ void loop()
     cym = abs(cy);
 
     // Determine if the user wants the code off
-    if(!off)
+    if(!turnCodeOff)
     {
         // Implements all the fixes (remove this line to un-mod the controller completely)
-        convertinputs();
+        convertInputs();
     }
 
     // Sends controller data to the console
-    console.write(gcc);
+    console.write(gamecubeReport);
 }
